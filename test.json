@@ -1,0 +1,1837 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Content Management API for Integrations",
+		"description": "API for managing content on Showpad. This is an external API subject to public exposure. First version of the api\n",
+		"version": "1.0.0"
+	},
+	"servers": [
+		{
+			"url": "https://{subdomain}.showpad.biz/api/content/v1",
+			"description": "production instance",
+			"variables": {
+				"subdomain": {
+					"default": "showpad",
+					"description": "Showpad customer subdomain"
+				}
+			}
+		},
+		{
+			"url": "https://{subdomain}.staging.showpad.biz/api/content/v1",
+			"description": "staging instance",
+			"variables": {
+				"subdomain": {
+					"default": "showpad",
+					"description": "Showpad customer subdomain"
+				}
+			}
+		},
+		{
+			"url": "https://{subdomain}.showpad-dev.biz/api/content/v1",
+			"description": "developer instance",
+			"variables": {
+				"subdomain": {
+					"default": "showpad",
+					"description": "Showpad customer subdomain"
+				}
+			}
+		}
+	],
+	"paths": {
+		"/file-libraries": {
+			"get": {
+				"tags": [
+					"file-libraries"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Get a list of file-libraries",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/pagingLimit"
+					},
+					{
+						"$ref": "#/components/parameters/pagingOffset"
+					}
+				],
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/listFileLibraries200"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					}
+				}
+			}
+		},
+		"/file-libraries/{libraryId}/files/ext": {
+			"get": {
+				"tags": [
+					"files"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Get a list of files for this file-library",
+				"responses": {
+					"200": {
+						"description": "A JSON array of files in the given file-library, uploaded by the requesting oauth2-client",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"count": {
+											"type": "integer",
+											"format": "int32"
+										},
+										"items": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/FileResponse"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					}
+				}
+			},
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/libraryIdInPath"
+				}
+			]
+		},
+		"/file-libraries/{libraryId}/files/ext/{externalId}": {
+			"get": {
+				"tags": [
+					"files"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"description": "Retrieve a single file based on an external ID\n",
+				"responses": {
+					"200": {
+						"description": "Get a single file with the given externalId within the given library",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FileResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/401"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					},
+					"404": {
+						"$ref": "#/components/responses/404"
+					}
+				}
+			},
+			"post": {
+				"tags": [
+					"files"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Update a file based on an external ID",
+				"description": "Allows you to update a file in a library. First you upload the metadata in JSON format. If you want to upload a new version of the file, please specify the `prepareUpload` parameter in the metadata. From that request, you will get back an \"uploadUrl\". You can use that URL to upload a new version of a file\n",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/matchTags"
+					}
+				],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/FileUpdate"
+				},
+				"responses": {
+					"200": {
+						"description": "An object with the file metadata",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FilePostResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/401"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					},
+					"404": {
+						"$ref": "#/components/responses/404"
+					},
+					"409": {
+						"$ref": "#/components/responses/409"
+					}
+				}
+			},
+			"delete": {
+				"tags": [
+					"files"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Delete a file based on an external ID",
+				"description": "Delete a file based on an external ID",
+				"responses": {
+					"200": {
+						"description": "The file was successfully removed"
+					},
+					"401": {
+						"$ref": "#/components/responses/401"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					},
+					"404": {
+						"$ref": "#/components/responses/404"
+					}
+				}
+			},
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/libraryIdInPath"
+				},
+				{
+					"name": "externalId",
+					"in": "path",
+					"description": "External Id of file (if exists).",
+					"required": true,
+					"schema": {
+						"type": "string"
+					}
+				}
+			]
+		},
+		"/file-libraries/{libraryId}/files/ext/{externalId}/versions": {
+			"get": {
+				"tags": [
+					"files"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Get a list of file versions",
+				"responses": {
+					"200": {
+						"description": "A list of files",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"count": {
+											"type": "integer",
+											"format": "int32"
+										},
+										"items": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/FileVersionResponse"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/401"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					},
+					"404": {
+						"$ref": "#/components/responses/404"
+					}
+				}
+			},
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/libraryIdInPath"
+				},
+				{
+					"name": "externalId",
+					"in": "path",
+					"description": "External Id of file (if exists).",
+					"required": true,
+					"schema": {
+						"type": "string"
+					}
+				}
+			]
+		},
+		"/file-libraries/{libraryId}/files/ext/{externalId}/versions/{versionId}": {
+			"get": {
+				"tags": [
+					"files"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Get 1 specific version for a file",
+				"responses": {
+					"200": {
+						"description": "Get a single version for the file with the given externalId within the given library",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FileVersionResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/401"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					},
+					"404": {
+						"$ref": "#/components/responses/404"
+					}
+				}
+			},
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/libraryIdInPath"
+				},
+				{
+					"name": "externalId",
+					"in": "path",
+					"description": "External Id of file (if exists).",
+					"required": true,
+					"schema": {
+						"type": "string"
+					}
+				},
+				{
+					"name": "versionId",
+					"in": "path",
+					"description": "Id of the version of the file.",
+					"required": true,
+					"schema": {
+						"type": "string"
+					}
+				}
+			]
+		},
+		"/content-profiles": {
+			"get": {
+				"tags": [
+					"content-profiles"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Get a list of content profiles",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/ids"
+					},
+					{
+						"$ref": "#/components/parameters/pagingLimit"
+					},
+					{
+						"$ref": "#/components/parameters/pagingOffset"
+					},
+					{
+						"$ref": "#/components/parameters/name"
+					},
+					{
+						"$ref": "#/components/parameters/usergroupIds"
+					},
+					{
+						"$ref": "#/components/parameters/libraryIds"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "A list of content profiles",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"count": {
+											"type": "integer",
+											"format": "int32"
+										},
+										"items": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/ContentProfileResponse"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/401"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					},
+					"404": {
+						"$ref": "#/components/responses/404"
+					}
+				}
+			},
+			"post": {
+				"tags": [
+					"content-profiles"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Create a content profile",
+				"requestBody": {
+					"$ref": "#/components/requestBodies/ContentProfile"
+				},
+				"responses": {
+					"200": {
+						"description": "The created content profile",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ContentProfileResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/401"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					},
+					"409": {
+						"$ref": "#/components/responses/409"
+					}
+				}
+			}
+		},
+		"/content-profiles/{contentProfileId}": {
+			"post": {
+				"tags": [
+					"content-profiles"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Update a content profile",
+				"requestBody": {
+					"$ref": "#/components/requestBodies/ContentProfile"
+				},
+				"responses": {
+					"200": {
+						"description": "The updated content profile",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ContentProfileResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/401"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					},
+					"404": {
+						"$ref": "#/components/responses/404"
+					},
+					"409": {
+						"$ref": "#/components/responses/409"
+					}
+				}
+			},
+			"delete": {
+				"tags": [
+					"content-profiles"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Delete a content profile",
+				"responses": {
+					"204": {
+						"$ref": "#/components/responses/401"
+					},
+					"401": {
+						"$ref": "#/components/responses/401"
+					},
+					"403": {
+						"$ref": "#/components/responses/403"
+					}
+				}
+			},
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/contentProfileIdInPath"
+				}
+			]
+		},
+		"/regions": {
+			"get": {
+				"tags": [
+					"regions"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Gets all available regions, their sub-region, and the countries in those sub-regions",
+				"responses": {
+					"200": {
+						"description": "A JSON object representing the regions, sub-regions and countries",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Regions"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/languages": {
+			"get": {
+				"tags": [
+					"languages"
+				],
+				"security": [
+					{
+						"showpadOAuth2": []
+					}
+				],
+				"summary": "Gets all available languages",
+				"responses": {
+					"200": {
+						"description": "A JSON array representing the supported languages",
+						"content": {
+							"application/json": {
+								"schema": {
+									"description": "List of supported ISO 639-2 languages",
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Language"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"parameters": {
+			"libraryIdInPath": {
+				"name": "libraryId",
+				"in": "path",
+				"description": "Division ID",
+				"required": true,
+				"schema": {
+					"type": "string"
+				}
+			},
+			"contentProfileIdInPath": {
+				"name": "contentProfileId",
+				"in": "path",
+				"description": "Content profile ID",
+				"required": true,
+				"schema": {
+					"type": "string"
+				}
+			},
+			"ids": {
+				"name": "ids",
+				"in": "query",
+				"description": "Filter the results by a list of primary keys",
+				"required": false,
+				"schema": {
+					"type": "string"
+				}
+			},
+			"pagingLimit": {
+				"name": "limit",
+				"in": "query",
+				"example": 100,
+				"description": "Limits the returned result",
+				"required": false,
+				"schema": {
+					"type": "integer"
+				}
+			},
+			"pagingOffset": {
+				"name": "offset",
+				"in": "query",
+				"example": 20,
+				"description": "Move the offset of the returned result, to be used in combination with \"limit\"",
+				"required": false,
+				"schema": {
+					"type": "integer"
+				}
+			},
+			"matchTags": {
+				"name": "matchTags",
+				"in": "query",
+				"description": "Indicates how to match tags. own: Tags posted in the body will only be matched by tags owned by the external system / all: All tags will be used to match on name (including local tags and tags from any external system). Other tags will be created as external tags",
+				"example": "own",
+				"schema": {
+					"type": "string",
+					"enum": [
+						"own",
+						"all"
+					]
+				}
+			},
+			"name": {
+				"name": "name",
+				"in": "query",
+				"example": "test",
+				"description": "Fuzzy search on the name",
+				"required": false,
+				"schema": {
+					"type": "string"
+				}
+			},
+			"usergroupIds": {
+				"name": "usergroupIds",
+				"in": "query",
+				"example": "ed1463473be80d12098fd00146076938,22b3d7f8eea74c37d3d140642ccbaeba",
+				"description": "Filter the results by a list of user groups",
+				"required": false,
+				"schema": {
+					"type": "string"
+				}
+			},
+			"libraryIds": {
+				"name": "libraryIds",
+				"in": "query",
+				"example": "4643adcc1621814e91c489b34bb428ed",
+				"description": "Filter the results by a list of libraries",
+				"required": false,
+				"schema": {
+					"type": "string"
+				}
+			}
+		},
+		"responses": {
+			"204": {
+				"description": "The resource was deleted"
+			},
+			"401": {
+				"description": "Unauthorized to request the resource",
+				"content": {
+					"application/json": {
+						"schema": {
+							"properties": {
+								"meta": {
+									"$ref": "#/components/schemas/Meta-401"
+								}
+							}
+						}
+					}
+				}
+			},
+			"403": {
+				"description": "Forbidden to request the resource",
+				"content": {
+					"application/json": {
+						"schema": {
+							"properties": {
+								"meta": {
+									"$ref": "#/components/schemas/Meta-403"
+								}
+							}
+						}
+					}
+				}
+			},
+			"404": {
+				"description": "The requested resource is not found",
+				"content": {
+					"application/json": {
+						"schema": {
+							"properties": {
+								"meta": {
+									"$ref": "#/components/schemas/Meta-404"
+								}
+							}
+						}
+					}
+				}
+			},
+			"409": {
+				"description": "The input values are incorrect",
+				"content": {
+					"application/json": {
+						"schema": {
+							"properties": {
+								"meta": {
+									"$ref": "#/components/schemas/Meta-409"
+								}
+							}
+						}
+					}
+				}
+			},
+			"listFileLibraries200": {
+				"description": "A JSON array of libraries that the user has access to",
+				"content": {
+					"application/json": {
+						"schema": {
+							"properties": {
+								"count": {
+									"type": "integer",
+									"format": "int32"
+								},
+								"items": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/FileLibraryResponse"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"schemas": {
+			"Meta-401": {
+				"properties": {
+					"code": {
+						"type": "integer",
+						"format": "int32",
+						"example": 401
+					},
+					"message": {
+						"type": "string",
+						"example": "Unauthorized"
+					}
+				}
+			},
+			"Meta-403": {
+				"properties": {
+					"code": {
+						"type": "integer",
+						"format": "int32",
+						"example": 403
+					},
+					"message": {
+						"type": "string",
+						"example": "Forbidden"
+					}
+				}
+			},
+			"Meta-404": {
+				"properties": {
+					"code": {
+						"type": "integer",
+						"format": "int32",
+						"example": 404
+					},
+					"message": {
+						"type": "string",
+						"example": "Not Found"
+					}
+				}
+			},
+			"Meta-409": {
+				"properties": {
+					"code": {
+						"type": "integer",
+						"format": "int32",
+						"example": 409
+					},
+					"message": {
+						"type": "string",
+						"example": "Conflict"
+					}
+				}
+			},
+			"FileLibraryResponse": {
+				"properties": {
+					"id": {
+						"type": "string",
+						"example": "my-library-id"
+					},
+					"name": {
+						"type": "string",
+						"example": "Global Library"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"FileVersionResponse": {
+				"properties": {
+					"id": {
+						"type": "string",
+						"example": "version-id"
+					},
+					"name": {
+						"type": "string",
+						"example": "Global Library"
+					},
+					"url": {
+						"type": "string",
+						"example": "https://www.showpad.biz"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FileStatus"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"FileResponse": {
+				"properties": {
+					"id": {
+						"type": "string",
+						"example": "my-file-id"
+					},
+					"currentVersionId": {
+						"type": "string",
+						"example": "current-version-id"
+					},
+					"name": {
+						"type": "string",
+						"example": "my-file.png"
+					},
+					"libraryId": {
+						"type": "string",
+						"example": "my-library-id",
+						"description": "This cannot be updated"
+					},
+					"status": {
+						"type": "string",
+						"example": "active",
+						"enum": [
+							"prepared",
+							"queued",
+							"processing",
+							"active",
+							"failed"
+						]
+					},
+					"externalId": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"expiresAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"releasedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"lastUploadedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"hideLabel": {
+						"type": "boolean"
+					},
+					"isAnnotatable": {
+						"type": "boolean"
+					},
+					"isDownloadable": {
+						"type": "boolean",
+						"deprecated": true,
+						"description": "deprecated by the downloadableInternal and downloadableExternal properties."
+					},
+					"downloadableInternal": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DownloadableTypes"
+						},
+						"description": "indicates what versions of the file can be downloaded internally (as a Showpad user). Empty array if it's not downloadable internally."
+					},
+					"downloadableExternal": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DownloadableTypes"
+						},
+						"description": "indicates what versions of the file can be downloaded externally (as a prospect). Empty array if it's not downloadable externally."
+					},
+					"isEditable": {
+						"type": "boolean"
+					},
+					"isLibraryShared": {
+						"type": "boolean"
+					},
+					"isOptimized": {
+						"type": "boolean"
+					},
+					"isPageLockable": {
+						"type": "boolean",
+						"description": "are locked pages possible on this type of file"
+					},
+					"isSensitive": {
+						"type": "boolean"
+					},
+					"isShareable": {
+						"type": "boolean"
+					},
+					"lockedPages": {
+						"type": "array",
+						"description": "pages that are part of this cannot be shared without the defined range",
+						"items": {
+							"type": "object",
+							"properties": {
+								"start": {
+									"type": "number",
+									"description": "the first page of the range, this is including this page"
+								},
+								"end": {
+									"type": "number",
+									"description": "the last page of the range, this is including this page"
+								}
+							}
+						}
+					},
+					"onlyShareEntireDocument": {
+						"type": "boolean",
+						"description": "prevent sharing separate pages from the file"
+					},
+					"pageCount": {
+						"type": "integer",
+						"description": "only for document types",
+						"nullable": true
+					},
+					"url": {
+						"type": "string",
+						"description": "only for url assets"
+					},
+					"allowRenderExternal": {
+						"type": "boolean",
+						"description": "only for url assets atm, should it be iframed (false) or should it allow to target _blank (true)"
+					},
+					"checksum": {
+						"type": "string",
+						"description": "hash of the file to upload. (md5)"
+					},
+					"tags": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"likesCount": {
+						"type": "integer",
+						"format": "int32",
+						"description": "the number of likes the file has"
+					},
+					"commentCount": {
+						"type": "integer",
+						"format": "int32",
+						"description": "the number of comments the file has"
+					},
+					"slug": {
+						"type": "string"
+					},
+					"countries": {
+						"type": "array",
+						"description": "list of assigned countries",
+						"items": {
+							"$ref": "#/components/schemas/Country"
+						}
+					},
+					"languages": {
+						"type": "array",
+						"description": "list of assigned languages",
+						"items": {
+							"$ref": "#/components/schemas/Language"
+						}
+					},
+					"authors": {
+						"type": "array",
+						"description": "list of assigned content authors",
+						"items": {
+							"$ref": "#/components/schemas/Author"
+						}
+					}
+				}
+			},
+			"FilePostResponse": {
+				"properties": {
+					"id": {
+						"type": "string",
+						"example": "my-file-id"
+					},
+					"name": {
+						"type": "string",
+						"example": "my-file.png"
+					},
+					"libraryId": {
+						"type": "string",
+						"example": "my-library-id",
+						"description": "This cannot be updated"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FileStatus"
+					},
+					"versionId": {
+						"type": "string",
+						"description": "Use this to check the status of the uploaded file (after upload)"
+					},
+					"externalId": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"expiresAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"releasedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"archivedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"hideLabel": {
+						"type": "boolean"
+					},
+					"isAnnotatable": {
+						"type": "boolean"
+					},
+					"isDownloadable": {
+						"type": "boolean",
+						"deprecated": true,
+						"description": "deprecated by the downloadableInternal and downloadableExternal properties"
+					},
+					"downloadableInternal": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DownloadableTypes"
+						},
+						"description": "indicates what versions of the file can be downloaded internally (as a Showpad user). Empty array if it's not downloadable internally."
+					},
+					"downloadableExternal": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DownloadableTypes"
+						},
+						"description": "indicates what versions of the file can be downloaded externally (as a prospect). Empty array if it's not downloadable externally."
+					},
+					"isSensitive": {
+						"type": "boolean"
+					},
+					"isShareable": {
+						"type": "boolean"
+					},
+					"isLibraryShared": {
+						"type": "boolean"
+					},
+					"url": {
+						"type": "string",
+						"description": "only for url assets"
+					},
+					"allowRenderExternal": {
+						"type": "boolean",
+						"description": "only for url assets atm, should it be iframed (false) or should it allow to target _blank (true)"
+					},
+					"checksum": {
+						"type": "string",
+						"description": "hash of the file to upload. (md5)"
+					},
+					"uploadUrl": {
+						"type": "string",
+						"example": "https://subdomain.showpad.biz/some/upload/path?signature=something",
+						"description": "Only returned with prepareUpload is true in the POST body"
+					},
+					"tags": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"countries": {
+						"type": "array",
+						"description": "list of assigned countries",
+						"items": {
+							"$ref": "#/components/schemas/Country"
+						}
+					},
+					"languages": {
+						"type": "array",
+						"description": "list of assigned languages",
+						"items": {
+							"$ref": "#/components/schemas/Language"
+						}
+					},
+					"authors": {
+						"type": "array",
+						"description": "list of assigned content authors",
+						"items": {
+							"$ref": "#/components/schemas/Author"
+						}
+					}
+				}
+			},
+			"FileStatus": {
+				"type": "string",
+				"enum": [
+					"queued",
+					"active",
+					"prepared",
+					"processing",
+					"failed"
+				]
+			},
+			"ContentProfileResponse": {
+				"properties": {
+					"id": {
+						"type": "string",
+						"example": "35c8bae66c91b0b4d0de0d8a36c4632a5d738457bafb26f249d38112405f0680"
+					},
+					"name": {
+						"type": "string",
+						"example": "My content profile"
+					},
+					"description": {
+						"type": "string",
+						"example": "Content profile description"
+					},
+					"usergroupIds": {
+						"type": "array",
+						"example": [
+							"ed1463473be80d12098fd00146076938"
+						],
+						"items": {
+							"type": "string"
+						}
+					},
+					"filterIds": {
+						"type": "array",
+						"example": [
+							"df8c16a83686fd165e4fd3a07ec84c05"
+						],
+						"items": {
+							"type": "string"
+						}
+					},
+					"libraryIds": {
+						"type": "array",
+						"example": [
+							"4643adcc1621814e91c489b34bb428ed"
+						],
+						"items": {
+							"type": "string"
+						}
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"Language": {
+				"description": "ISO 639-2 language code",
+				"type": "string",
+				"example": "en"
+			},
+			"Country": {
+				"description": "ISO 3166-1 country code",
+				"type": "string",
+				"example": "US"
+			},
+			"Author": {
+				"description": "Content author of an asset, represented as User PID",
+				"type": "string",
+				"example": "83a5a807b3c487c91f39d1c3da00b5d6"
+			},
+			"FileActionPermissions": {
+				"properties": {
+					"editName": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editDescription": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editLocalTags": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editGlobalTags": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editExternalTags": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editLanguages": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editCountries": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editAuthors": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editReleasedAt": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editExpiresAt": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editHideLabel": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editIsAnnotatable": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editIsDownloadable": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editIsSensitive": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editIsShareable": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editIsEditable": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editIsLibraryShared": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editIsOptimized": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editIsPageLockable": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editUseProcessed": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editOnlyShareEntireDocument": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editLockedPages": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editAllowRenderExternal": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editUrl": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"editIcon": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"archiveAsset": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"downloadAsset": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"uploadNewVersion": {
+						"$ref": "#/components/schemas/ActionPermission"
+					},
+					"viewReporting": {
+						"$ref": "#/components/schemas/ActionPermission"
+					}
+				}
+			},
+			"ActionPermission": {
+				"properties": {
+					"allowed": {
+						"type": "boolean",
+						"description": "true if the action is allowed. false if not",
+						"example": false
+					},
+					"reason": {
+						"description": "null or the reason why this action is not allowed",
+						"example": "insufficientPrivileges",
+						"type": "string",
+						"nullable": true,
+						"enum": [
+							"insufficientPrivileges",
+							"ownedByExternalSystem",
+							"unsupportedType"
+						]
+					}
+				}
+			},
+			"Regions": {
+				"description": "List of supported regions, subregions and their ISO 3166-1 country-codes",
+				"type": "object",
+				"example": {
+					"Asia": {
+						"Southern Asia": [
+							"AF",
+							"BD",
+							"BT",
+							"IN",
+							"IR",
+							"MV",
+							"NP",
+							"PK",
+							"LK"
+						],
+						"Western Asia": [
+							"AM",
+							"AZ",
+							"BH",
+							"CY",
+							"GE",
+							"IQ",
+							"IL",
+							"JO",
+							"KW",
+							"LB",
+							"OM",
+							"PS",
+							"QA",
+							"SA",
+							"SY",
+							"TR",
+							"AE",
+							"YE"
+						],
+						"South-eastern Asia": [
+							"BN",
+							"KH",
+							"ID",
+							"LA",
+							"MY",
+							"MM",
+							"PH",
+							"SG",
+							"TH",
+							"TL",
+							"VN"
+						],
+						"Eastern Asia": [
+							"CN",
+							"HK",
+							"JP",
+							"KP",
+							"KR",
+							"MO",
+							"MN",
+							"TW"
+						],
+						"Central Asia": [
+							"KZ",
+							"KG",
+							"TJ",
+							"TM",
+							"UZ"
+						]
+					},
+					"Europe": {
+						"Northern Europe": [
+							"AX",
+							"DK",
+							"EE",
+							"FO",
+							"FI",
+							"GG",
+							"IS",
+							"IE",
+							"IM",
+							"JE",
+							"LV",
+							"LT",
+							"NO",
+							"SJ",
+							"SE",
+							"GB"
+						],
+						"Southern Europe": [
+							"AL",
+							"AD",
+							"BA",
+							"HR",
+							"GI",
+							"GR",
+							"VA",
+							"IT",
+							"MT",
+							"ME",
+							"MK",
+							"PT",
+							"SM",
+							"RS",
+							"SI",
+							"ES"
+						],
+						"Western Europe": [
+							"AT",
+							"BE",
+							"FR",
+							"DE",
+							"LI",
+							"LU",
+							"MC",
+							"NL",
+							"CH"
+						],
+						"Eastern Europe": [
+							"BY",
+							"BG",
+							"CZ",
+							"HU",
+							"MD",
+							"PL",
+							"RO",
+							"RU",
+							"SK",
+							"UA"
+						]
+					},
+					"Africa": {
+						"Northern Africa": [
+							"DZ",
+							"EG",
+							"LY",
+							"MA",
+							"SD",
+							"TN",
+							"EH"
+						],
+						"Sub-Saharan Africa": [
+							"AO",
+							"BJ",
+							"BW",
+							"IO",
+							"BF",
+							"BI",
+							"CV",
+							"CM",
+							"CF",
+							"TD",
+							"KM",
+							"CG",
+							"CD",
+							"CI",
+							"DJ",
+							"GQ",
+							"ER",
+							"SZ",
+							"ET",
+							"TF",
+							"GA",
+							"GM",
+							"GH",
+							"GN",
+							"GW",
+							"KE",
+							"LS",
+							"LR",
+							"MG",
+							"MW",
+							"ML",
+							"MR",
+							"MU",
+							"YT",
+							"MZ",
+							"NA",
+							"NE",
+							"NG",
+							"RE",
+							"RW",
+							"SH",
+							"ST",
+							"SN",
+							"SC",
+							"SL",
+							"SO",
+							"ZA",
+							"SS",
+							"TZ",
+							"TG",
+							"UG",
+							"ZM",
+							"ZW"
+						]
+					},
+					"Oceania": {
+						"Polynesia": [
+							"AS",
+							"CK",
+							"PF",
+							"NU",
+							"PN",
+							"WS",
+							"TK",
+							"TO",
+							"TV",
+							"WF"
+						],
+						"Australia and New Zealand": [
+							"AU",
+							"CX",
+							"CC",
+							"HM",
+							"NZ",
+							"NF"
+						],
+						"Melanesia": [
+							"FJ",
+							"NC",
+							"PG",
+							"SB",
+							"VU"
+						],
+						"Micronesia": [
+							"GU",
+							"KI",
+							"MH",
+							"FM",
+							"NR",
+							"MP",
+							"PW",
+							"UM"
+						]
+					},
+					"Americas": {
+						"Latin America and the Caribbean": [
+							"AI",
+							"AG",
+							"AR",
+							"AW",
+							"BS",
+							"BB",
+							"BZ",
+							"BO",
+							"BQ",
+							"BV",
+							"BR",
+							"KY",
+							"CL",
+							"CO",
+							"CR",
+							"CU",
+							"CW",
+							"DM",
+							"DO",
+							"EC",
+							"SV",
+							"FK",
+							"GF",
+							"GD",
+							"GP",
+							"GT",
+							"GY",
+							"HT",
+							"HN",
+							"JM",
+							"MQ",
+							"MX",
+							"MS",
+							"NI",
+							"PA",
+							"PY",
+							"PE",
+							"PR",
+							"BL",
+							"KN",
+							"LC",
+							"MF",
+							"VC",
+							"SX",
+							"GS",
+							"SR",
+							"TT",
+							"TC",
+							"UY",
+							"VE",
+							"VG",
+							"VI"
+						],
+						"Northern America": [
+							"BM",
+							"CA",
+							"GL",
+							"PM",
+							"US"
+						]
+					},
+					"Uncategorized": {
+						"Uncategorized": [
+							"AQ"
+						]
+					}
+				}
+			},
+			"DownloadableTypes": {
+				"type": "string",
+				"enum": [
+					"original",
+					"pdf"
+				]
+			}
+		},
+		"requestBodies": {
+			"FileUpdate": {
+				"description": "File to upload",
+				"required": true,
+				"content": {
+					"application/json": {
+						"schema": {
+							"properties": {
+								"name": {
+									"type": "string",
+									"example": "my-file.png"
+								},
+								"externalId": {
+									"type": "string",
+									"description": "[Note] when updating, this will update the external id on the asset and asset file\n"
+								},
+								"description": {
+									"type": "string"
+								},
+								"hideLabel": {
+									"type": "boolean",
+									"default": false
+								},
+								"isAnnotatable": {
+									"type": "boolean",
+									"default": true,
+									"description": "True for annotatable file types (documents)"
+								},
+								"isDownloadable": {
+									"type": "boolean",
+									"default": true,
+									"deprecated": true,
+									"description": "deprecated by the downloadableInternal and downloadableExternal properties"
+								},
+								"downloadableInternal": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/DownloadableTypes"
+									},
+									"description": "indicates what versions of the file can be downloaded internally (as a Showpad user). Empty array if it's not downloadable internally."
+								},
+								"downloadableExternal": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/DownloadableTypes"
+									},
+									"description": "indicates what versions of the file can be downloaded externally (as a prospect). Empty array if it's not downloadable externally."
+								},
+								"isSensitive": {
+									"type": "boolean",
+									"default": false
+								},
+								"isShareable": {
+									"type": "boolean",
+									"default": true
+								},
+								"isLibraryShared": {
+									"type": "boolean",
+									"default": false
+								},
+								"expiresAt": {
+									"type": "string",
+									"format": "date-time"
+								},
+								"releasedAt": {
+									"type": "string",
+									"format": "date-time"
+								},
+								"archivedAt": {
+									"type": "string",
+									"format": "date-time",
+									"nullable": true,
+									"description": "When null, the asset is no longer in the trash"
+								},
+								"url": {
+									"type": "string",
+									"description": "only for url assets"
+								},
+								"allowRenderExternal": {
+									"type": "boolean",
+									"description": "only for url assets atm, should it be iframed (false) or should it allow to target _blank (true)"
+								},
+								"checksum": {
+									"type": "string",
+									"description": "hash of the file to upload. (md5)"
+								},
+								"prepareUpload": {
+									"deprecated": true,
+									"type": "boolean",
+									"description": "Deprecated. Use uploadMethod instead. Equivalent to uploadMethod `url`"
+								},
+								"uploadMethod": {
+									"type": "string",
+									"enum": [
+										"url"
+									],
+									"description": "Choose which type of upload you want. Default is `url`"
+								},
+								"removeClientOwnership": {
+									"type": "boolean",
+									"description": "indicate whether you want to allow the file to be managed by Showpad admins. Useful when disconnecting the app from Showpad\n"
+								},
+								"resetViewCount": {
+									"type": "boolean",
+									"description": "Resets the view count of the file. This is only possible when uploading a new version"
+								},
+								"resetLikesCount": {
+									"type": "boolean",
+									"description": "Resets the likes count of the file. This is only possible when uploading a new version"
+								},
+								"resetFileName": {
+									"type": "boolean",
+									"description": "Resets the file name of the file (adopting the file name of the new asset). This is only possible when uploading a new version"
+								},
+								"tags": {
+									"type": "array",
+									"items": {
+										"type": "string",
+										"required": [
+											"name"
+										]
+									}
+								},
+								"externalServiceId": {
+									"type": "string",
+									"description": "The protected id of the external service for this file"
+								},
+								"externalServiceFileType": {
+									"type": "string",
+									"description": "The mimetype of the file as determined by the external service"
+								},
+								"languages": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Language"
+									}
+								},
+								"countries": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Country"
+									}
+								},
+								"authors": {
+									"type": "array",
+									"description": "list of assigned content authors",
+									"items": {
+										"$ref": "#/components/schemas/Author"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"ContentProfile": {
+				"description": "Content profile to create",
+				"required": true,
+				"content": {
+					"application/json": {
+						"schema": {
+							"properties": {
+								"name": {
+									"type": "string",
+									"example": "My new content profile",
+									"description": "This should be unique"
+								},
+								"description": {
+									"type": "string"
+								},
+								"usergroupIds": {
+									"type": "array",
+									"example": [
+										"ed1463473be80d12098fd00146076938"
+									],
+									"items": {
+										"type": "string"
+									}
+								},
+								"filterIds": {
+									"type": "array",
+									"example": [
+										"df8c16a83686fd165e4fd3a07ec84c05"
+									],
+									"items": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"securitySchemes": {
+			"ShowpadOAuth2": {
+				"type": "http",
+				"scheme": "oauth2",
+				"description": "This API uses OAuth 2 with the implicit grant flow. [More info](https://help.showpad.com/hc/en-us/articles/211957669-OAuth-authentication-authorization-using-the-API)"
+			}
+		}
+	}
+}

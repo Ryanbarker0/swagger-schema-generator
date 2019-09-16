@@ -1,0 +1,17 @@
+{
+  "name": "swagger_generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "js-yaml": "^3.13.1",
+    "lodash": "^4.17.15",
+    "request": "^2.88.0",
+    "swagger-parser": "^8.0.1"
+  }
+}
